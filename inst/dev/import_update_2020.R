@@ -43,6 +43,13 @@ stopifnot(st_crs(sectors_2020)$input == "Belge 1972 / Belgian Lambert 72")
 sectors_2020 <- st_transform(sectors_2020, crs = 4326)
 
 
+# Issue: arrondissement Verviers (REFNIS-code 63000) is verdeeld in 2 afzonderlijke NUTS: 
+# BE335 => deze code heeft betrekking op de Franstalige gemeenten van het arrondissement Verviers
+# BE335 => deze code heeft betrekking op de Duitstalige gemeenten van het arrondissement Verviers
+
+sectors_2020 <- sectors_2020 %>%
+  mutate(nuts3 = if_else(c_arrd == '63000', 'BE335/BE336', nuts3))
+
 # add area in km2
 
 
@@ -50,12 +57,7 @@ sectors_2020 <- st_transform(sectors_2020, crs = 4326)
 
 
 
-# Issue: arrondissement Verviers (REFNIS-code 63000) is verdeeld in 2 afzonderlijke NUTS: 
-# BE335 => deze code heeft betrekking op de Franstalige gemeenten van het arrondissement Verviers
-# BE335 => deze code heeft betrekking op de Duitstalige gemeenten van het arrondissement Verviers
 
-sectors_2020 <- sectors_2020 %>%
-  mutate(nuts3 = if_else(c_arrd == '63000', 'BE335/BE336', nuts3))
 
 
 # Construct cleaned sector dataset (BE_ADMIN_SECTOR)
@@ -90,7 +92,7 @@ MUNI <- sectors_2020 %>%
     area = sum(m_area_ha))%>%
   ungroup() %>%
   rename(refnis = cnis5_2020)  %>%
-  verify(dim(.) == c(581, 9))
+  verify(dim(.) == c(581, 10))
 
 
 # aggregate sectors to district level (BE_ADMIN_DISTRICT) => CD_DSTR_REFNIS
@@ -202,6 +204,12 @@ qtm(BE_ADMIN_AGGLOMERATIONS)
 
 https://statbel.fgov.be/nl/over-statbel/methodologie/classificaties/geografie
 
+Issues / choices
+
+# variable names are a mix of upper/lower-case, 
 # * janitor::clean_names => consistent variable names (lower case, underscore, unicode)
 # * NIS-codes are 5-digits, so prefix with 0's where needed
 # be_sector be_municipality be_district be_province be_region be_nation 
+
+Muncipial 
+Level 4: 581 gemeenten (589 tot 31/12/2018)
